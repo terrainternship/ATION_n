@@ -1,0 +1,74 @@
+pip install rembg 
+
+from rembg import remove
+from PIL import Image
+import os
+from os import listdir
+from zipfile import ZipFile
+
+from google.colab import files
+uploaded = files.upload()
+_________________________________________________________________________________________________
+def process_images(input_folder, output_folder):
+    # Получаем список всех файлов во входной папке
+    for root, dirs, files in os.walk(input_folder):
+        for file_name in files:
+            try:
+                # Составляем полный путь к входному файлу
+                input_path = os.path.join(root, file_name)
+
+                # Загружаем входное изображение
+                input_image = Image.open(input_path)
+
+                # Удаляем фон
+                output_image = remove(input_image)
+
+                # Составляем полный путь к выходному файлу
+                output_path = os.path.join(output_folder, os.path.relpath(input_path, input_folder))
+
+                # Создаем папку для выходного файла, если её нет
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+                # Сохраняем выходное изображение
+                output_image.save(output_path)
+
+                print(f"Фон успешно удален для: {file_name}")
+
+            except Exception as e:
+                print(f"Ошибка при обработке {file_name}: {str(e)}")
+
+# Определяем пути к файлам
+zip_file_path = 'file path.zip'
+extracted_folder = '/content/extracted_images'
+output_folder = '/content/extracted_images_with_background_removed'
+
+# Создаем папки, если их нет
+os.makedirs(extracted_folder, exist_ok=True)
+os.makedirs(output_folder, exist_ok=True)
+
+# Извлекаем содержимое zip-файла
+with ZipFile(zip_file_path, 'r') as zip_ref:
+    zip_ref.extractall(extracted_folder)
+
+# Обрабатываем изображения в извлеченной папке
+process_images(extracted_folder, output_folder)
+
+print("Удаление фона завершено.")
+
+_________________________________________________________________________________________________
+
+### download zip file to PC ###
+
+import shutil
+
+# Определите путь к папке, которую вы хотите архивировать
+folder_path = '/content/extracted_images_with_background_removed'
+# Определите путь для zip-файла
+zip_file_path = '/content/extracted_images_with_background_removed.zip'
+# Создайте zip-файл
+shutil.make_archive(zip_file_path[:-4], 'zip', folder_path)
+
+from google.colab import files
+# Укажите путь к zip-файлу
+files.download(zip_file_path)
+
